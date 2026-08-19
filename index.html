@@ -173,6 +173,31 @@
 
   const graphLinks = links.map(([s, t]) => ({ source: s, target: t }));
 
+  // ============ INITIAL LAYOUT ============
+  // Pin zone planets on a Fibonacci sphere so the galaxy never collapses into a blob;
+  // seed services in shells around their parent zone for an orbit look.
+  const GALAXY_R = 165;
+  zones.forEach((z, i) => {
+    const n = nodes.find(x => x.id === z.id);
+    const phi = Math.acos(-1 + (2 * (i + 0.5)) / zones.length);
+    const theta = Math.sqrt(zones.length * Math.PI) * phi;
+    n.x = GALAXY_R * Math.cos(theta) * Math.sin(phi);
+    n.y = GALAXY_R * Math.sin(theta) * Math.sin(phi);
+    n.z = GALAXY_R * Math.cos(phi);
+    n.fx = n.x; n.fy = n.y; n.fz = n.z; // pinned planets
+  });
+  services.forEach(s => {
+    const z = nodes.find(x => x.id === s.zone);
+    if (!z) return;
+    const n = nodes.find(x => x.id === s.id);
+    const a = Math.random() * Math.PI * 2;
+    const b = Math.acos(2 * Math.random() - 1);
+    const rr = 26 + Math.random() * 24;
+    n.x = z.x + rr * Math.sin(b) * Math.cos(a);
+    n.y = z.y + rr * Math.sin(b) * Math.sin(a);
+    n.z = z.z + rr * Math.cos(b);
+  });
+
   document.getElementById('statZones').textContent = zones.length;
   document.getElementById('statSvc').textContent = services.length + ipPools.length;
   document.getElementById('statLinks').textContent = graphLinks.length;
@@ -230,7 +255,16 @@
         new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.6 })
       );
     })
-    .nodeVal(node => node.type === 'zone' ? 10 + Math.sqrt(node.count || 1) * 1.6 : 2)
+    .nodeVal(node => node.type === 'zone' ? 6 + Math.sqrt(node.count || 1) * 1.0 : 1.2)
+    .nodeRelSize(1.7)
+    .chargeStrength(-70)
+    .d3VelocityDecay(0.35)
+    .linkDistance(l => {
+      const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
+      const t = typeof l.target === 'object' ? l.target : nodes.find(n => n.id === l.target);
+      const crossZone = (s && s.type === 'zone') !== (t && t.type === 'zone');
+      return crossZone ? 62 : 34;
+    })
     .linkColor(() => 'rgba(0, 255, 170, 0.13)')
     .linkWidth(0.5)
     .linkDirectionalParticles(1)
