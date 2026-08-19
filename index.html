@@ -176,7 +176,7 @@
   // ============ INITIAL LAYOUT ============
   // Pin zone planets on a Fibonacci sphere so the galaxy never collapses into a blob;
   // seed services in shells around their parent zone for an orbit look.
-  const GALAXY_R = 165;
+  const GALAXY_R = 300;
   zones.forEach((z, i) => {
     const n = nodes.find(x => x.id === z.id);
     const phi = Math.acos(-1 + (2 * (i + 0.5)) / zones.length);
@@ -192,7 +192,7 @@
     const n = nodes.find(x => x.id === s.id);
     const a = Math.random() * Math.PI * 2;
     const b = Math.acos(2 * Math.random() - 1);
-    const rr = 26 + Math.random() * 24;
+    const rr = 42 + Math.random() * 42;
     n.x = z.x + rr * Math.sin(b) * Math.cos(a);
     n.y = z.y + rr * Math.sin(b) * Math.sin(a);
     n.z = z.z + rr * Math.cos(b);
@@ -263,7 +263,7 @@
       const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
       const t = typeof l.target === 'object' ? l.target : nodes.find(n => n.id === l.target);
       const crossZone = (s && s.type === 'zone') !== (t && t.type === 'zone');
-      return crossZone ? 62 : 34;
+      return crossZone ? 100 : 55;
     })
     .linkColor(() => 'rgba(0, 255, 170, 0.13)')
     .linkWidth(0.5)
@@ -279,7 +279,7 @@
   Graph.scene().add(new THREE.DirectionalLight(0xffffff, 0.9));
   Graph.scene().add(new THREE.PointLight(0x00ffaa, 0.4, 0, 0));
 
-  Graph.cameraPosition({ x: 0, y: 100, z: 340 }, { x: 0, y: 0, z: 0 }, 0);
+  Graph.cameraPosition({ x: 0, y: 180, z: 640 }, { x: 0, y: 0, z: 0 }, 0);
   Graph.controls().autoRotate = true;
   Graph.controls().autoRotateSpeed = 0.6;
 
