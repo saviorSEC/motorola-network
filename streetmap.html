@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MOTOROLA NETWORK — TENANT STREET MAP</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --bg:#04060c; --panel:rgba(10,16,28,.85); --line:rgba(0,255,170,.18);
+    --accent:#00ffaa; --accent2:#00d0ff; --warn:#ffb020; --text:#c8d6e0; --dim:#5b6b78;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--text);
+    font-family:"JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace;overflow:hidden}
+  #map{position:fixed;inset:0;background:#0a0f16}
+  .leaflet-container{background:#0a0f16}
+  .leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.7) contrast(.9)}
+  .leaflet-control-zoom a{background:var(--panel)!important;color:var(--text)!important;border-color:var(--line)!important}
+  .leaflet-control-attribution{background:rgba(4,6,12,.7)!important;color:var(--dim)!important;font-size:8px}
+  .leaflet-control-attribution a{color:var(--accent2)!important}
+
+  .tabs{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:4px;
+    background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;max-width:96vw;overflow-x:auto}
+  .tabs a{color:var(--dim);text-decoration:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    padding:7px 16px;border-radius:4px;white-space:nowrap}
+  .tabs a.active{color:var(--accent);background:rgba(0,255,170,.08);border:1px solid var(--line)}
+  .tabs a:hover{color:var(--text)}
+
+  .hud{position:fixed;top:18px;left:18px;z-index:10;pointer-events:none}
+  .hud .title{font-size:15px;font-weight:700;letter-spacing:2px;color:#eaf4ee}
+  .hud .sub{font-size:10px;letter-spacing:3px;color:var(--dim);margin-top:4px;text-transform:uppercase}
+  .hud .badge{display:inline-block;margin-top:10px;padding:3px 8px;font-size:9px;letter-spacing:2px;
+    border:1px solid var(--warn);color:var(--warn);border-radius:2px}
+
+  .stats{position:fixed;top:18px;right:18px;z-index:10;text-align:right;pointer-events:none}
+  .stats .num{font-size:26px;font-weight:700;color:var(--accent)}
+  .stats .lbl{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  .stats .row{margin-top:10px}
+
+  #search{position:fixed;top:96px;right:18px;z-index:20;width:230px;background:var(--panel);
+    border:1px solid var(--line);color:var(--text);padding:9px 12px;border-radius:6px;
+    font-family:inherit;font-size:11px;letter-spacing:1px;outline:none}
+  #search:focus{border-color:var(--accent)}
+
+  .legend{position:fixed;bottom:18px;left:18px;z-index:20;background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:12px 14px;font-size:9.5px;letter-spacing:1px;max-width:260px}
+  .legend .h{color:var(--accent);letter-spacing:2px;margin-bottom:8px;font-size:10px}
+  .legend .row{display:flex;align-items:center;gap:8px;margin:5px 0;color:var(--dim)}
+  .legend .row .sw{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .legend .note{margin-top:8px;color:#3d4a54;font-size:8.5px;line-height:1.5;letter-spacing:.5px}
+
+  #detail{position:fixed;top:70px;right:18px;bottom:60px;width:380px;z-index:25;background:var(--panel);
+    border:1px solid var(--line);border-radius:8px;display:none;flex-direction:column;backdrop-filter:blur(8px)}
+  #detail.open{display:flex}
+  .d-head{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .d-title{font-size:13px;font-weight:700;color:#eaf4ee;letter-spacing:.5px;word-break:break-all}
+  .d-type{font-size:9px;letter-spacing:2px;color:var(--accent2);margin-top:4px;text-transform:uppercase}
+  .d-close{position:absolute;top:10px;right:12px;background:none;border:1px solid var(--line);color:var(--dim);
+    width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1}
+  .d-close:hover{color:var(--accent);border-color:var(--accent)}
+  .d-body{overflow-y:auto;padding:12px 16px;font-size:11px}
+  .d-body::-webkit-scrollbar{width:4px}
+  .d-body::-webkit-scrollbar-thumb{background:var(--line)}
+  .kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid rgba(0,255,170,.06)}
+  .kv .k{color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-size:9px;padding-top:2px;flex-shrink:0}
+  .kv .v{color:var(--text);text-align:right;word-break:break-word}
+  .kv .v a{color:var(--accent);text-decoration:none}
+  .p-sec{margin-top:14px;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+  .p-note{margin-top:10px;font-size:10px;color:var(--dim);line-height:1.5}
+
+  .brand{position:fixed;bottom:14px;right:18px;z-index:5;font-size:9px;color:var(--dim);letter-spacing:2px}
+  .brand b{color:var(--accent2)}
+  @media(max-width:760px){
+    #detail{width:calc(100vw - 24px)}
+    .legend{display:none}
+    .hud .sub{font-size:8px}
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="tabs">
+  <a href="index.html">⌂ Galaxy 3D</a>
+  <a href="streetmap.html" class="active">⛳ Street Map</a>
+</div>
+
+<div class="hud">
+  <div class="title">MOTOROLA NETWORK</div>
+  <div class="sub">Video Manager — Tenant Fleet · Street Map</div>
+  <span class="badge">PASSIVE OSINT · INFERRED GEOLOCATION</span>
+</div>
+
+<div class="stats">
+  <div class="row"><div class="num" id="statTenants">0</div><div class="lbl">Tenants</div></div>
+  <div class="row"><div class="num" id="statPlaced">0</div><div class="lbl">Placed</div></div>
+  <div class="row"><div class="num" id="statRegions">0</div><div class="lbl">Regions</div></div>
+</div>
+
+<input id="search" placeholder="search tenant…" autocomplete="off" />
+
+<div class="legend">
+  <div class="h">LEGEND</div>
+  <div class="row"><span class="sw" style="background:#4ade80"></span> tenant · high confidence</div>
+  <div class="row"><span class="sw" style="background:#ffb020"></span> tenant · inferred</div>
+  <div class="row"><span class="sw" style="background:#ff3d81"></span> tenant · low confidence</div>
+  <div class="row"><span class="sw" style="background:#7c5cff"></span> LEARN / analytics region</div>
+  <div class="row"><span class="sw" style="background:#00d0ff"></span> cloud infra</div>
+  <div class="note">Coordinates inferred from public tenant slugs — agency HQ / city center, not camera locations. Passive OSINT only.</div>
+</div>
+
+<div id="detail">
+  <div class="d-head">
+    <div class="d-title" id="dTitle">—</div>
+    <div class="d-type" id="dType">—</div>
+    <button class="d-close" id="dClose">✕</button>
+  </div>
+  <div class="d-body" id="dBody"></div>
+</div>
+
+<div class="brand">BROUGHT TO YOU BY // <b>CHURCH OF MALWARE</b></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="streetmap-data.js"></script>
+<script>
+(function(){
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const kv = (k,v) => v ? `<div class="kv"><div class="k">${esc(k)}</div><div class="v">${v}</div></div>` : '';
+
+  const D = STREET_DATA;
+  const placed = D.tenants.filter(t => t.lat != null && t.lng != null);
+  const unplaced = D.tenants.filter(t => t.lat == null || t.lng == null);
+
+  document.getElementById('statTenants').textContent = D.tenants.length;
+  document.getElementById('statPlaced').textContent = placed.length;
+  document.getElementById('statRegions').textContent = D.regions.length;
+
+  const map = L.map('map', {zoomControl:true, minZoom:2}).setView([39.5, -100], 4);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const confColor = {high:'#4ade80', inferred:'#ffb020', low:'#ff3d81'};
+  const confLabel = {high:'HIGH CONFIDENCE', inferred:'INFERRED', low:'LOW CONFIDENCE'};
+  const markers = [];
+
+  D.tenants.forEach(t => {
+    if (t.lat == null || t.lng == null) return;
+    const color = confColor[t.conf] || '#4ade80';
+    const ic = L.divIcon({
+      className:'', html:`<div style="width:13px;height:13px;border-radius:50%;background:${color};
+        border:2px solid #04060c;box-shadow:0 0 8px ${color}88"></div>`,
+      iconSize:[13,13], iconAnchor:[6,6]
+    });
+    const m = L.marker([t.lat, t.lng], {icon: ic}).addTo(map);
+    m._t = t;
+    m.on('click', () => openDetail(t, 'TENANT — ' + confLabel[t.conf]));
+    markers.push(m);
+  });
+
+  D.regions.forEach(r => {
+    const color = r.kind === 'azure' ? '#7c5cff' : '#00d0ff';
+    const ic = L.divIcon({
+      className:'', html:`<div style="width:14px;height:14px;border-radius:2px;transform:rotate(45deg);background:${color};
+        border:2px solid #04060c;box-shadow:0 0 8px ${color}88"></div>`,
+      iconSize:[14,14], iconAnchor:[7,7]
+    });
+    const m = L.marker([r.lat, r.lng], {icon: ic}).addTo(map);
+    m._t = r;
+    m.on('click', () => openDetail(r, 'REGION — ' + r.kind.toUpperCase()));
+    markers.push(m);
+  });
+
+  function openDetail(t, type){
+    document.getElementById('dTitle').textContent = t.name || t.id;
+    document.getElementById('dType').textContent = type;
+    let body = kv('Host', t.host ? `<a href="https://${esc(t.host)}" target="_blank" rel="noopener">${esc(t.host)}</a>` : null);
+    if (t.city) body += kv('City', `${esc(t.city)}${t.state ? ', ' + esc(t.state) : ''}${t.country ? ' · ' + esc(t.country) : ''}`);
+    if (t.conf) body += kv('Confidence', esc(t.conf.toUpperCase()));
+    if (t.note) body += `<div class="p-sec">Notes</div><div class="p-note">${esc(t.note)}</div>`;
+    if (unplaced.length) {
+      body += `<div class="p-sec">Unplaced tenants (${unplaced.length})</div><div class="p-note">${unplaced.map(u=>esc(u.id)).join(' · ')}</div>`;
+    }
+    document.getElementById('dBody').innerHTML = body;
+    document.getElementById('detail').classList.add('open');
+  }
+  document.getElementById('dClose').onclick = () => document.getElementById('detail').classList.remove('open');
+
+  // search
+  const q = document.getElementById('search');
+  q.addEventListener('input', () => {
+    const term = q.value.trim().toLowerCase();
+    let matched = 0;
+    markers.forEach(m => {
+      const t = m._t;
+      const hay = (t.name + ' ' + t.host + ' ' + (t.city||'') + ' ' + (t.state||'') + ' ' + (t.note||'')).toLowerCase();
+      const show = !term || hay.includes(term);
+      if (show) { m.addTo(map); if (t.lat) matched++; }
+      else m.remove();
+    });
+    if (term && matched === 1) {
+      const m = markers.find(x => x._map && (x._t.name + ' ' + x._t.host).toLowerCase().includes(term));
+      if (m) map.setView(m.getLatLng(), 8);
+    }
+  });
+
+  // bounds
+  const placedLatLngs = placed.map(t => [t.lat, t.lng]).concat(D.regions.map(r => [r.lat, r.lng]));
+  if (placedLatLngs.length) map.fitBounds(placedLatLngs, {padding:[40,40], maxZoom:7});
+
+  window.addEventListener('resize', () => map.invalidateSize());
+})();
+</script>
+</body>
+</html>

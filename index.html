@@ -28,6 +28,13 @@
   .hud .badge { display: inline-block; margin-top: 10px; padding: 3px 8px; font-size: 9px;
     letter-spacing: 2px; border: 1px solid var(--warn); color: var(--warn); border-radius: 2px; }
 
+  .tabs { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; gap: 4px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px; max-width: 96vw; overflow-x: auto; }
+  .tabs a { color: var(--dim); text-decoration: none; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    padding: 7px 16px; border-radius: 4px; white-space: nowrap; }
+  .tabs a.active { color: var(--accent); background: rgba(0,255,170,0.08); border: 1px solid var(--line); }
+  .tabs a:hover { color: var(--text); }
+
   .stats { position: fixed; top: 18px; right: 18px; z-index: 10; text-align: right; pointer-events: none; }
   .stats .num { font-size: 26px; font-weight: 700; color: var(--accent); }
   .stats .lbl { font-size: 9px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; }
@@ -105,6 +112,11 @@
 </style>
 </head>
 <body>
+
+<div class="tabs">
+  <a href="index.html" class="active">⌂ Galaxy 3D</a>
+  <a href="streetmap.html">⛳ Street Map</a>
+</div>
 
 <div id="graph"></div>
 
