@@ -1,0 +1,780 @@
+{
+ "zones": [
+  {
+   "id": "z-lpr",
+   "name": "LPR // FIXED PLATE SEARCH",
+   "color": "#00e5ff",
+   "note": "Fixed Plate Search cloud (fps.radiocentral) + VehicleManager VM8 — the LPR data plane. api.fps.{dev,qa,stage}.radiocentral + Cloudflare-gated dcs-dev."
+  },
+  {
+   "id": "z-learn",
+   "name": "LEARN // INVESTIGATIVE",
+   "color": "#7c5cff",
+   "note": "Vigilant LEARN regional cluster on Microsoft Azure — learnfl (East US), learnau (Australia East), learndev. Investigative plate analytics."
+  },
+  {
+   "id": "z-vehicle",
+   "name": "VEHICLE MANAGER",
+   "color": "#ffd166",
+   "note": "vm.motorolasolutions.com — VehicleManager VM8 fleet/LPR management portal, OIDC login (/VM8_Auth)."
+  },
+  {
+   "id": "z-videomanager",
+   "name": "VIDEO MANAGER // TENANTS",
+   "color": "#4ade80",
+   "note": "*.videomanager.ex.motorolasolutions.com — 29+ live customer tenants: Brinks, GardaWorld WA, Surrey PD, Metro Vancouver, Hempstead PD, Rocky View, Wheatland…"
+  },
+  {
+   "id": "z-radiocentral",
+   "name": "RADIOCENTRAL // RADIO CLOUD",
+   "color": "#ffb020",
+   "note": "Radio fleet cloud: adminapi/adminportal (dev/qa/stage/fed/us/ca/au), app, audioconfig (Auth0), Codeplug CMS, rcinsights (fed)."
+  },
+  {
+   "id": "z-identity",
+   "name": "IDENTITY // SSO",
+   "color": "#ff3d81",
+   "note": "Okta (appstatus/myapps, sign-in widget), PingFederate (idm.imw / idmmaster / pb1), Auth0 (audioconfig)."
+  },
+  {
+   "id": "z-corp",
+   "name": "CORPORATE // MOTOROLASOLUTIONS.COM",
+   "color": "#a78bfa",
+   "note": "AEM + Coveo marketing stack, myaccount/myapps/mpe (distributor), discover (marketing prefs), Salesforce Experience Cloud."
+  },
+  {
+   "id": "z-acquired",
+   "name": "ACQUIRED // VIDEO SECURITY",
+   "color": "#ff9de2",
+   "note": "Vigilant (OTRS support), Avigilon (Alta Access, Unity cloud, LicenseServer), Pelco (public API docs, app), Openpath (access control), Envysion."
+  },
+  {
+   "id": "z-devops",
+   "name": "DEVOPS // INTERNAL",
+   "color": "#60a5fa",
+   "note": "artifactory.motorolasolutions.com (JFrog, 200), aiassistedbot (dev/stage/prod), api-dev clusters."
+  },
+  {
+   "id": "z-thirdparty",
+   "name": "THIRD-PARTY // HOSTING",
+   "color": "#94a3b8",
+   "note": "Microsoft Azure, Cloudflare, Okta CDN, readme.io, Brightcove, Salesforce."
+  }
+ ],
+ "services": [
+  {
+   "id": "s-fps-api",
+   "name": "api.fps.radiocentral.motorolasolutions.com",
+   "zone": "z-lpr",
+   "role": "FIXED PLATE SEARCH API",
+   "note": "Root 404 (path-gated). Variants: api-dev, api-qa, api-stage. The FPS cloud API surface.",
+   "dns": [],
+   "endpoints": [
+    "/"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-fps-dcs",
+   "name": "api.fps.dcs-dev.motorolasolutions.com",
+   "zone": "z-lpr",
+   "role": "FPS DEV CLUSTER — CLOUDFLARE",
+   "note": "403 Cloudflare — exists, gated. dcs-dev = device-control-system dev.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm",
+   "name": "vm.motorolasolutions.com",
+   "zone": "z-vehicle",
+   "role": "VEHICLEMANAGER VM8",
+   "note": "VehicleManager fleet/LPR management portal. OIDC login at /VM8_Auth/Login/VehicleManager_web (302→login_required).",
+   "dns": [],
+   "endpoints": [
+    "/VM8_Auth/Login/VehicleManager_web"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-learn-fl",
+   "name": "learnfl.vigilantsolutions.com",
+   "zone": "z-learn",
+   "role": "LEARN — FLORIDA REGION",
+   "note": "200. Azure East US (20.141.88.92). Redirects to vm.motorolasolutions.com VehicleManager login.",
+   "dns": [
+    "20.141.88.92"
+   ],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-learn-au",
+   "name": "learnau.vigilantsolutions.com",
+   "zone": "z-learn",
+   "role": "LEARN — AUSTRALIA REGION",
+   "note": "Azure Australia East (52.187.196.228).",
+   "dns": [
+    "52.187.196.228"
+   ],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-learn-dev",
+   "name": "learndev.vigilantsolutions.com",
+   "zone": "z-learn",
+   "role": "LEARN — DEV",
+   "note": "Azure (50.250.218.146).",
+   "dns": [
+    "50.250.218.146"
+   ],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm-tenants",
+   "name": "*.videomanager.ex.motorolasolutions.com (29+ tenants)",
+   "zone": "z-videomanager",
+   "role": "TENANT FLEET",
+   "note": "Cloudflare-fronted 'Login' SPAs. Tenants: brinks, garda-wa, surreypd, metrovanc, hempd, rockyview, wheatland, bvista, chrltwnps, georgecty, grtlkspa, hardwick, irsol, leeco, milrsvil, nanton, oceansprg, stealth, svpd, uco, utahcor-wa, auxpd, chivid, cria, bearenergy + dev tenants (anz.dev, jpn.dev, newversion.dev, tso.dev).",
+   "dns": [],
+   "endpoints": [
+    "/"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm-brinks",
+   "name": "brinks.videomanager.ex.motorolasolutions.com",
+   "zone": "z-videomanager",
+   "role": "TENANT — BRINKS",
+   "note": "Armored-car/cash logistics tenant.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm-garda",
+   "name": "garda-wa.videomanager.ex.motorolasolutions.com",
+   "zone": "z-videomanager",
+   "role": "TENANT — GARDAWORLD WA",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm-surreypd",
+   "name": "surreypd.videomanager.ex.motorolasolutions.com",
+   "zone": "z-videomanager",
+   "role": "TENANT — SURREY PD",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vm-metrovanc",
+   "name": "metrovanc.videomanager.ex.motorolasolutions.com",
+   "zone": "z-videomanager",
+   "role": "TENANT — METRO VANCOUVER",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-adminapi",
+   "name": "adminapi*.radiocentral.motorolasolutions.com",
+   "zone": "z-radiocentral",
+   "role": "ADMIN API CLUSTER",
+   "note": "dev/dev-east/dev-west/qa/stage/fed/fed-stage/us/usaz.fed/usva.fed/ca/au — 404 root, path-gated.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-adminportal",
+   "name": "adminportal.fed.radiocentral.motorolasolutions.com",
+   "zone": "z-radiocentral",
+   "role": "ADMIN PORTAL (FED)",
+   "note": "403 Forbidden — federal tenant admin portal. Variants fed-stage/usaz/usva.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-audio",
+   "name": "audioconfig.radiocentral.motorolasolutions.com",
+   "zone": "z-radiocentral",
+   "role": "RADIO AUDIO CONFIG",
+   "note": "200 'Radio Audio Settings: Web Tool' — Auth0 + Cloudflare.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-cms",
+   "name": "cms.radiocentral.motorolasolutions.com",
+   "zone": "z-radiocentral",
+   "role": "CODEPLUG MANAGEMENT SYSTEM",
+   "note": "200 — radio codeplug (programming) management.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-insights",
+   "name": "rcinsights.motorolasolutions.com (+fed)",
+   "zone": "z-radiocentral",
+   "role": "RADIOCENTRAL INSIGHTS",
+   "note": "Analytics plane, fed variant.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-rc-app",
+   "name": "app.radiocentral.motorolasolutions.com",
+   "zone": "z-radiocentral",
+   "role": "RADIOCENTRAL APP",
+   "note": "404 root — SPA, path-gated.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-okta",
+   "name": "Okta SSO (appstatus/myapps)",
+   "zone": "z-identity",
+   "role": "OKTA IDENTITY",
+   "note": "appstatus.motorolasolutions.com 200 with okta-signin-widget 7.48.1; ok4static2.oktacdn.com assets.",
+   "dns": [],
+   "endpoints": [
+    "/login/login.htm"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-ping",
+   "name": "idm.imw.motorolasolutions.com",
+   "zone": "z-identity",
+   "role": "PINGFEDERATE SSO",
+   "note": "Ping Identity: /idp/startSSO.ping. idmmaster.imw + pb1.imw variants.",
+   "dns": [],
+   "endpoints": [
+    "/idp/startSSO.ping"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-auth0",
+   "name": "Auth0 (audioconfig)",
+   "zone": "z-identity",
+   "role": "AUTH0",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-www",
+   "name": "www.motorolasolutions.com",
+   "zone": "z-corp",
+   "role": "MARKETING — AEM + COVEO",
+   "note": "Adobe Experience Manager (/etc.clientlibs/msi-occ) + Coveo search (clientlibs_coveo_search).",
+   "dns": [],
+   "endpoints": [
+    "/en_us/video-security-access-control/license-plate-recognition-camera-systems.html"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-myaccount",
+   "name": "myaccount.motorolasolutions.com",
+   "zone": "z-corp",
+   "role": "ACCOUNT PORTAL",
+   "dns": [],
+   "endpoints": [
+    "/euri/"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-myapps",
+   "name": "myapps.motorolasolutions.com",
+   "zone": "z-corp",
+   "role": "APPS PORTAL — OKTA",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-mpe",
+   "name": "mpe.motorolasolutions.com",
+   "zone": "z-corp",
+   "role": "DISTRIBUTOR PORTAL",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-discover",
+   "name": "discover.motorolasolutions.com",
+   "zone": "z-corp",
+   "role": "MARKETING PREFS",
+   "note": "Pardot-class marketing preference center.",
+   "dns": [],
+   "endpoints": [
+    "/marketing-preferences"
+   ],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-salesforce",
+   "name": "motorolasolutions.my.site.com",
+   "zone": "z-corp",
+   "role": "SALESFORCE EXPERIENCE CLOUD",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-vigilant",
+   "name": "vigilantvideos.com + vigilantsolutions.com",
+   "zone": "z-acquired",
+   "role": "VIGILANT (LPR ORIGIN)",
+   "note": "Original Vigilant Solutions LPR domains. tickets.vigilantsolutions.com = OTRS support (200).",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-otrs",
+   "name": "tickets.vigilantsolutions.com",
+   "zone": "z-acquired",
+   "role": "OTRS SUPPORT PORTAL",
+   "note": "200 — OTRS External Interface (ticketing), public.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-avigilon",
+   "name": "avigilon.com + alta.avigilon.com",
+   "zone": "z-acquired",
+   "role": "AVIGILON ALTA",
+   "note": "Alta Access (200), api.{aus,can}.alta.avigilon.com, au.cloud.avigilon.com = Avigilon Unity (Azure), activate.avigilon.com = LicenseServer (nginx).",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-pelco",
+   "name": "pelco.com + apidocs.pelco.com",
+   "zone": "z-acquired",
+   "role": "PELCO",
+   "note": "Public API docs (pelcoapidocs.readme.io), app.go.pelco.com, securityinsights.pelco.com.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-openpath",
+   "name": "openpath.com",
+   "zone": "z-acquired",
+   "role": "OPENPATH ACCESS CONTROL",
+   "note": "api.can.openpath.com (200-class). Cloud access control.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-envysion",
+   "name": "envysion.com",
+   "zone": "z-acquired",
+   "role": "ENVYSION VIDEO",
+   "note": "learning.envysion.com.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-artifactory",
+   "name": "artifactory.motorolasolutions.com",
+   "zone": "z-devops",
+   "role": "JFROG ARTIFACTORY",
+   "note": "200 — JFrog artifact repository exposed. High-signal internal surface (passive check only).",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-aibot",
+   "name": "aiassistedbot.motorolasolutions.com (+dev/stage)",
+   "zone": "z-devops",
+   "role": "AI DEPLOYMENT BOT",
+   "note": "AIAssistedDeploymentBotWebClient on prod/dev/stage.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-azure",
+   "name": "Microsoft Azure",
+   "zone": "z-thirdparty",
+   "role": "LEARN + CLOUD HOSTING",
+   "note": "learnfl/learnau/learndev + RC cloud on Azure.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-cloudflare",
+   "name": "Cloudflare",
+   "zone": "z-thirdparty",
+   "role": "CDN / WAF",
+   "note": "Fronts videomanager tenants, fps.dcs-dev, pelco, radiocentral bits.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-readme",
+   "name": "pelcoapidocs.readme.io",
+   "zone": "z-thirdparty",
+   "role": "PUBLIC API DOCS",
+   "note": "Pelco API reference hosted on readme.io — public docs reveal endpoint schemas.",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  },
+  {
+   "id": "s-brightcove",
+   "name": "edge.api.brightcove.com",
+   "zone": "z-thirdparty",
+   "role": "VIDEO CDN",
+   "dns": [],
+   "endpoints": [],
+   "keys": [],
+   "cert": null
+  }
+ ],
+ "ipPools": [],
+ "links": [
+  [
+   "s-vm",
+   "s-ping"
+  ],
+  [
+   "s-rc-cms",
+   "s-rc-adminapi"
+  ],
+  [
+   "s-discover",
+   "z-corp"
+  ],
+  [
+   "s-rc-audio",
+   "s-auth0"
+  ],
+  [
+   "s-cloudflare",
+   "z-thirdparty"
+  ],
+  [
+   "s-artifactory",
+   "s-azure"
+  ],
+  [
+   "s-avigilon",
+   "z-acquired"
+  ],
+  [
+   "s-readme",
+   "z-thirdparty"
+  ],
+  [
+   "s-rc-adminportal",
+   "z-radiocentral"
+  ],
+  [
+   "s-learn-au",
+   "z-learn"
+  ],
+  [
+   "s-fps-api",
+   "s-vm"
+  ],
+  [
+   "s-avigilon",
+   "s-azure"
+  ],
+  [
+   "s-artifactory",
+   "z-devops"
+  ],
+  [
+   "s-pelco",
+   "s-cloudflare"
+  ],
+  [
+   "s-vm-garda",
+   "s-vm-tenants"
+  ],
+  [
+   "s-myapps",
+   "z-corp"
+  ],
+  [
+   "s-rc-adminapi",
+   "z-radiocentral"
+  ],
+  [
+   "s-myaccount",
+   "z-corp"
+  ],
+  [
+   "s-learn-fl",
+   "s-vm"
+  ],
+  [
+   "s-vm-tenants",
+   "s-cloudflare"
+  ],
+  [
+   "s-learn-dev",
+   "z-learn"
+  ],
+  [
+   "s-fps-dcs",
+   "s-fps-api"
+  ],
+  [
+   "s-www",
+   "s-salesforce"
+  ],
+  [
+   "s-fps-dcs",
+   "z-lpr"
+  ],
+  [
+   "s-vm-metrovanc",
+   "z-videomanager"
+  ],
+  [
+   "s-rc-app",
+   "z-radiocentral"
+  ],
+  [
+   "s-learn-au",
+   "s-learn-fl"
+  ],
+  [
+   "s-openpath",
+   "z-acquired"
+  ],
+  [
+   "s-vm-brinks",
+   "s-vm-tenants"
+  ],
+  [
+   "s-vm",
+   "z-vehicle"
+  ],
+  [
+   "s-www",
+   "s-brightcove"
+  ],
+  [
+   "s-myapps",
+   "s-okta"
+  ],
+  [
+   "s-okta",
+   "z-identity"
+  ],
+  [
+   "s-vm-surreypd",
+   "s-vm-tenants"
+  ],
+  [
+   "s-azure",
+   "z-thirdparty"
+  ],
+  [
+   "s-vm-garda",
+   "z-videomanager"
+  ],
+  [
+   "s-learn-fl",
+   "s-azure"
+  ],
+  [
+   "s-rc-app",
+   "s-rc-adminapi"
+  ],
+  [
+   "s-appstatus",
+   "s-okta"
+  ],
+  [
+   "s-learn-dev",
+   "s-learn-fl"
+  ],
+  [
+   "s-rc-insights",
+   "z-radiocentral"
+  ],
+  [
+   "s-fps-api",
+   "z-lpr"
+  ],
+  [
+   "s-vm-tenants",
+   "s-vm"
+  ],
+  [
+   "s-learn-fl",
+   "z-learn"
+  ],
+  [
+   "s-learn-fl",
+   "s-vigilant"
+  ],
+  [
+   "s-rc-audio",
+   "z-radiocentral"
+  ],
+  [
+   "s-ping",
+   "z-identity"
+  ],
+  [
+   "s-vigilant",
+   "z-acquired"
+  ],
+  [
+   "s-brightcove",
+   "z-thirdparty"
+  ],
+  [
+   "s-mpe",
+   "z-corp"
+  ],
+  [
+   "s-otrs",
+   "z-acquired"
+  ],
+  [
+   "s-vm-brinks",
+   "z-videomanager"
+  ],
+  [
+   "s-pelco",
+   "z-acquired"
+  ],
+  [
+   "s-rc-insights",
+   "s-rc-adminapi"
+  ],
+  [
+   "s-www",
+   "s-myaccount"
+  ],
+  [
+   "s-openpath",
+   "s-cloudflare"
+  ],
+  [
+   "s-otrs",
+   "s-vigilant"
+  ],
+  [
+   "s-rc-cms",
+   "z-radiocentral"
+  ],
+  [
+   "s-fps-api",
+   "s-cloudflare"
+  ],
+  [
+   "s-vm-tenants",
+   "z-videomanager"
+  ],
+  [
+   "s-auth0",
+   "z-identity"
+  ],
+  [
+   "s-vm-surreypd",
+   "z-videomanager"
+  ],
+  [
+   "s-www",
+   "z-corp"
+  ],
+  [
+   "s-salesforce",
+   "z-corp"
+  ],
+  [
+   "s-envysion",
+   "z-acquired"
+  ],
+  [
+   "s-pelco",
+   "s-readme"
+  ],
+  [
+   "s-vm",
+   "s-okta"
+  ],
+  [
+   "s-rc-adminapi",
+   "s-rc-adminportal"
+  ],
+  [
+   "s-aibot",
+   "z-devops"
+  ],
+  [
+   "s-vm-metrovanc",
+   "s-vm-tenants"
+  ]
+ ]
+}
