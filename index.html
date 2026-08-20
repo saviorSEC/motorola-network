@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>MOTOROLA NETWORK — LPR · VIDEO · RADIO ECOSYSTEM</title>
+<title>MOTOROLA NETWORK // INTERNAL — LPR · VIDEO · RADIO TOPOLOGY</title>
 <style>
   :root {
     --bg: #04060c;
@@ -27,13 +27,6 @@
   .hud .sub { font-size: 10px; letter-spacing: 3px; color: var(--dim); margin-top: 4px; text-transform: uppercase; }
   .hud .badge { display: inline-block; margin-top: 10px; padding: 3px 8px; font-size: 9px;
     letter-spacing: 2px; border: 1px solid var(--warn); color: var(--warn); border-radius: 2px; }
-
-  .tabs { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 30; display: flex; gap: 4px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px; max-width: 96vw; overflow-x: auto; }
-  .tabs a { color: var(--dim); text-decoration: none; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-    padding: 7px 16px; border-radius: 4px; white-space: nowrap; }
-  .tabs a.active { color: var(--accent); background: rgba(0,255,170,0.08); border: 1px solid var(--line); }
-  .tabs a:hover { color: var(--text); }
 
   .stats { position: fixed; top: 18px; right: 18px; z-index: 10; text-align: right; pointer-events: none; }
   .stats .num { font-size: 26px; font-weight: 700; color: var(--accent); }
@@ -109,21 +102,26 @@
     .attrib { font-size: 7.5px; letter-spacing: 1px; max-width: 62vw; }
     .tooltip { font-size: 9px; max-width: 70vw; }
   }
+  .tabs{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;max-width:96vw;overflow-x:auto}
+  .tabs a{color:var(--dim);text-decoration:none;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-radius:4px;white-space:nowrap}
+  .tabs a.active{color:var(--accent);background:rgba(0,255,170,.08);border:1px solid var(--line)}
+  .tabs a:hover{color:var(--text)}
+  @media (max-width:768px){.tabs{top:8px;padding:3px;gap:2px}.tabs a{font-size:8.5px;letter-spacing:1.5px;padding:6px 10px}}
 </style>
 </head>
 <body>
 
+<div id="graph"></div>
 <div class="tabs">
   <a href="index.html" class="active">⌂ Galaxy 3D</a>
   <a href="streetmap.html">⛳ Street Map</a>
 </div>
 
-<div id="graph"></div>
 
 <div class="hud">
-  <div class="title">MOTOROLA SOLUTIONS // NETWORK</div>
-  <div class="sub">LPR · Video Security · Radio Cloud — passive OSINT (CT + DNS + probes)</div>
-  <div class="badge">PASSIVE OSINT · 828 HOSTS SWEPT · CREDS REDACTED</div>
+  <div class="title">MOTOROLA NETWORK // TOPOLOGY</div>
+  <div class="sub">Motorola Solutions LPR/video/radio cloud — passive OSINT (DNS + CT + frontend)</div>
+  <div class="badge">PASSIVE OSINT · TLP:AMBER · CREDS REDACTED</div>
 </div>
 
 <div class="stats">
@@ -173,50 +171,6 @@
 
   const graphLinks = links.map(([s, t]) => ({ source: s, target: t }));
 
-  // ============ DETERMINISTIC GALAXY LAYOUT ============
-  // Everything is pinned (fx/fy/fz) — the force sim cannot move a single node.
-  // Zones: Fibonacci sphere. Services: tilted orbital rings around their planet.
-  const GALAXY_R = 300;
-  zones.forEach((z, i) => {
-    const n = nodes.find(x => x.id === z.id);
-    const phi = Math.acos(-1 + (2 * (i + 0.5)) / zones.length);
-    const theta = Math.sqrt(zones.length * Math.PI) * phi;
-    n.x = GALAXY_R * Math.cos(theta) * Math.sin(phi);
-    n.y = GALAXY_R * Math.sin(theta) * Math.sin(phi);
-    n.z = GALAXY_R * Math.cos(phi);
-    n.fx = n.x; n.fy = n.y; n.fz = n.z;
-  });
-  // group services by zone, lay each out on tilted concentric rings
-  const svcByZone = {};
-  services.forEach(s => { (svcByZone[s.zone] = svcByZone[s.zone] || []).push(s); });
-  Object.keys(svcByZone).forEach((zoneId, zi) => {
-    const z = nodes.find(x => x.id === zoneId);
-    if (!z) return;
-    const list = svcByZone[zoneId];
-    list.forEach((s, si) => {
-      const n = nodes.find(x => x.id === s.id);
-      const ring = Math.floor(si / 9);            // up to 9 per ring
-      const inRing = si % 9;
-      const R = 46 + ring * 34 + (inRing % 3) * 4; // ring radius
-      const ang = (inRing / 9) * Math.PI * 2 + ring * 0.7;
-      // tilt each ring plane differently so orbits are 3D
-      const tiltX = (zi * 47 + ring * 29) % 360 * Math.PI / 180;
-      const tiltZ = (zi * 83 + ring * 53) % 360 * Math.PI / 180;
-      const px = Math.cos(ang) * R, py = Math.sin(ang) * R, pz = (inRing % 3) * 6 - 6;
-      // rotate by tiltX then tiltZ
-      const x1 = px, y1 = py * Math.cos(tiltX) - pz * Math.sin(tiltX), z1 = py * Math.sin(tiltX) + pz * Math.cos(tiltX);
-      const x2 = x1 * Math.cos(tiltZ) - y1 * Math.sin(tiltZ), y2 = x1 * Math.sin(tiltZ) + y1 * Math.cos(tiltZ), z2 = z1;
-      n.x = z.x + x2; n.y = z.y + y2; n.z = z.z + z2;
-      n.fx = n.x; n.fy = n.y; n.fz = n.z;
-    });
-  });
-  // pools (if any) pinned near origin scatter
-  ipPools.forEach((p, i) => {
-    const n = nodes.find(x => x.id === p.id);
-    n.x = Math.cos(i * 2.4) * 60; n.y = Math.sin(i * 2.4) * 60; n.z = -GALAXY_R * 0.9;
-    n.fx = n.x; n.fy = n.y; n.fz = n.z;
-  });
-
   document.getElementById('statZones').textContent = zones.length;
   document.getElementById('statSvc').textContent = services.length + ipPools.length;
   document.getElementById('statLinks').textContent = graphLinks.length;
@@ -257,63 +211,39 @@
     .nodeThreeObject(node => {
       if (node.type === 'zone') {
         const group = new THREE.Group();
-        const r = 9 + Math.sqrt(node.count || 1) * 1.5;
+        const r = 7 + Math.sqrt(node.count || 1) * 1.2;
         const sphere = new THREE.Mesh(
-          new THREE.SphereGeometry(r, 32, 32),
-          new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.3 })
+          new THREE.SphereGeometry(r, 24, 24),
+          new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.45, metalness: 0.4, roughness: 0.3 })
         );
         group.add(sphere);
-        // glow halo
-        const halo = new THREE.Mesh(
-          new THREE.SphereGeometry(r * 1.45, 24, 24),
-          new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.10, depthWrite: false })
-        );
-        group.add(halo);
-        // orbit ring (visual "saturn" ring)
-        const ringGeo = new THREE.RingGeometry(r * 2.1, r * 2.35, 48);
-        const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
-          color: node.color, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false
-        }));
-        ring.rotation.x = Math.PI / 2.4;
-        ring.rotation.z = (node.count || 1) * 0.7;
-        group.add(ring);
-        const lbl = makeSprite(node.name, '#eaf4ee', r * 3.2);
-        lbl.position.y = r * 2.6;
+        const lbl = makeSprite(node.name, '#eaf4ee', r * 3.4);
+        lbl.position.y = r + 7;
         group.add(lbl);
         return group;
       }
-      const r = node.type === 'pool' ? 2.4 : 1.9;
-      const m = new THREE.Mesh(
-        new THREE.SphereGeometry(r, 12, 12),
-        new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.7 })
+      const r = node.type === 'pool' ? 2.2 : 1.7;
+      return new THREE.Mesh(
+        new THREE.SphereGeometry(r, 10, 10),
+        new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.6 })
       );
-      return m;
     })
-    .nodeVal(node => node.type === 'zone' ? 9 + Math.sqrt(node.count || 1) * 1.5 : 1.9)
-    .nodeRelSize(1.0)
-    .chargeStrength(0)
-    .d3VelocityDecay(0)
-    .linkDistance(l => {
-      const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
-      const t = typeof l.target === 'object' ? t.target : nodes.find(n => n.id === l.target);
-      const crossZone = (s && s.type === 'zone') !== (t && t.type === 'zone');
-      return crossZone ? 100 : 55;
-    })
+    .nodeVal(node => node.type === 'zone' ? 10 + Math.sqrt(node.count || 1) * 1.6 : 2)
     .linkColor(() => 'rgba(0, 255, 170, 0.13)')
     .linkWidth(0.5)
     .linkDirectionalParticles(1)
     .linkDirectionalParticleWidth(1.6)
     .linkDirectionalParticleSpeed(0.005)
     .linkDirectionalParticleColor(() => 'rgba(0, 255, 170, 0.9)')
-    .warmupTicks(0)
-    .cooldownTicks(0)
+    .warmupTicks(150)
+    .cooldownTicks(350)
     .backgroundColor('rgba(0,0,0,0)');
 
   Graph.scene().add(new THREE.AmbientLight(0xffffff, 0.55));
   Graph.scene().add(new THREE.DirectionalLight(0xffffff, 0.9));
   Graph.scene().add(new THREE.PointLight(0x00ffaa, 0.4, 0, 0));
 
-  Graph.cameraPosition({ x: 0, y: 180, z: 640 }, { x: 0, y: 0, z: 0 }, 0);
+  Graph.cameraPosition({ x: 0, y: 100, z: 340 }, { x: 0, y: 0, z: 0 }, 0);
   Graph.controls().autoRotate = true;
   Graph.controls().autoRotateSpeed = 0.6;
 
