@@ -173,9 +173,9 @@
 
   const graphLinks = links.map(([s, t]) => ({ source: s, target: t }));
 
-  // ============ INITIAL LAYOUT ============
-  // Pin zone planets on a Fibonacci sphere so the galaxy never collapses into a blob;
-  // seed services in shells around their parent zone for an orbit look.
+  // ============ DETERMINISTIC GALAXY LAYOUT ============
+  // Everything is pinned (fx/fy/fz) — the force sim cannot move a single node.
+  // Zones: Fibonacci sphere. Services: tilted orbital rings around their planet.
   const GALAXY_R = 300;
   zones.forEach((z, i) => {
     const n = nodes.find(x => x.id === z.id);
@@ -184,18 +184,37 @@
     n.x = GALAXY_R * Math.cos(theta) * Math.sin(phi);
     n.y = GALAXY_R * Math.sin(theta) * Math.sin(phi);
     n.z = GALAXY_R * Math.cos(phi);
-    n.fx = n.x; n.fy = n.y; n.fz = n.z; // pinned planets
+    n.fx = n.x; n.fy = n.y; n.fz = n.z;
   });
-  services.forEach(s => {
-    const z = nodes.find(x => x.id === s.zone);
+  // group services by zone, lay each out on tilted concentric rings
+  const svcByZone = {};
+  services.forEach(s => { (svcByZone[s.zone] = svcByZone[s.zone] || []).push(s); });
+  Object.keys(svcByZone).forEach((zoneId, zi) => {
+    const z = nodes.find(x => x.id === zoneId);
     if (!z) return;
-    const n = nodes.find(x => x.id === s.id);
-    const a = Math.random() * Math.PI * 2;
-    const b = Math.acos(2 * Math.random() - 1);
-    const rr = 42 + Math.random() * 42;
-    n.x = z.x + rr * Math.sin(b) * Math.cos(a);
-    n.y = z.y + rr * Math.sin(b) * Math.sin(a);
-    n.z = z.z + rr * Math.cos(b);
+    const list = svcByZone[zoneId];
+    list.forEach((s, si) => {
+      const n = nodes.find(x => x.id === s.id);
+      const ring = Math.floor(si / 9);            // up to 9 per ring
+      const inRing = si % 9;
+      const R = 46 + ring * 34 + (inRing % 3) * 4; // ring radius
+      const ang = (inRing / 9) * Math.PI * 2 + ring * 0.7;
+      // tilt each ring plane differently so orbits are 3D
+      const tiltX = (zi * 47 + ring * 29) % 360 * Math.PI / 180;
+      const tiltZ = (zi * 83 + ring * 53) % 360 * Math.PI / 180;
+      const px = Math.cos(ang) * R, py = Math.sin(ang) * R, pz = (inRing % 3) * 6 - 6;
+      // rotate by tiltX then tiltZ
+      const x1 = px, y1 = py * Math.cos(tiltX) - pz * Math.sin(tiltX), z1 = py * Math.sin(tiltX) + pz * Math.cos(tiltX);
+      const x2 = x1 * Math.cos(tiltZ) - y1 * Math.sin(tiltZ), y2 = x1 * Math.sin(tiltZ) + y1 * Math.cos(tiltZ), z2 = z1;
+      n.x = z.x + x2; n.y = z.y + y2; n.z = z.z + z2;
+      n.fx = n.x; n.fy = n.y; n.fz = n.z;
+    });
+  });
+  // pools (if any) pinned near origin scatter
+  ipPools.forEach((p, i) => {
+    const n = nodes.find(x => x.id === p.id);
+    n.x = Math.cos(i * 2.4) * 60; n.y = Math.sin(i * 2.4) * 60; n.z = -GALAXY_R * 0.9;
+    n.fx = n.x; n.fy = n.y; n.fz = n.z;
   });
 
   document.getElementById('statZones').textContent = zones.length;
@@ -238,30 +257,45 @@
     .nodeThreeObject(node => {
       if (node.type === 'zone') {
         const group = new THREE.Group();
-        const r = 7 + Math.sqrt(node.count || 1) * 1.2;
+        const r = 9 + Math.sqrt(node.count || 1) * 1.5;
         const sphere = new THREE.Mesh(
-          new THREE.SphereGeometry(r, 24, 24),
-          new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.45, metalness: 0.4, roughness: 0.3 })
+          new THREE.SphereGeometry(r, 32, 32),
+          new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.3 })
         );
         group.add(sphere);
-        const lbl = makeSprite(node.name, '#eaf4ee', r * 3.4);
-        lbl.position.y = r + 7;
+        // glow halo
+        const halo = new THREE.Mesh(
+          new THREE.SphereGeometry(r * 1.45, 24, 24),
+          new THREE.MeshBasicMaterial({ color: node.color, transparent: true, opacity: 0.10, depthWrite: false })
+        );
+        group.add(halo);
+        // orbit ring (visual "saturn" ring)
+        const ringGeo = new THREE.RingGeometry(r * 2.1, r * 2.35, 48);
+        const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+          color: node.color, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false
+        }));
+        ring.rotation.x = Math.PI / 2.4;
+        ring.rotation.z = (node.count || 1) * 0.7;
+        group.add(ring);
+        const lbl = makeSprite(node.name, '#eaf4ee', r * 3.2);
+        lbl.position.y = r * 2.6;
         group.add(lbl);
         return group;
       }
-      const r = node.type === 'pool' ? 2.2 : 1.7;
-      return new THREE.Mesh(
-        new THREE.SphereGeometry(r, 10, 10),
-        new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.6 })
+      const r = node.type === 'pool' ? 2.4 : 1.9;
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(r, 12, 12),
+        new THREE.MeshStandardMaterial({ color: node.color, emissive: node.color, emissiveIntensity: 0.7 })
       );
+      return m;
     })
-    .nodeVal(node => node.type === 'zone' ? 6 + Math.sqrt(node.count || 1) * 1.0 : 1.2)
-    .nodeRelSize(1.7)
-    .chargeStrength(-70)
-    .d3VelocityDecay(0.35)
+    .nodeVal(node => node.type === 'zone' ? 9 + Math.sqrt(node.count || 1) * 1.5 : 1.9)
+    .nodeRelSize(1.0)
+    .chargeStrength(0)
+    .d3VelocityDecay(0)
     .linkDistance(l => {
       const s = typeof l.source === 'object' ? l.source : nodes.find(n => n.id === l.source);
-      const t = typeof l.target === 'object' ? l.target : nodes.find(n => n.id === l.target);
+      const t = typeof l.target === 'object' ? t.target : nodes.find(n => n.id === l.target);
       const crossZone = (s && s.type === 'zone') !== (t && t.type === 'zone');
       return crossZone ? 100 : 55;
     })
@@ -271,8 +305,8 @@
     .linkDirectionalParticleWidth(1.6)
     .linkDirectionalParticleSpeed(0.005)
     .linkDirectionalParticleColor(() => 'rgba(0, 255, 170, 0.9)')
-    .warmupTicks(150)
-    .cooldownTicks(350)
+    .warmupTicks(0)
+    .cooldownTicks(0)
     .backgroundColor('rgba(0,0,0,0)');
 
   Graph.scene().add(new THREE.AmbientLight(0xffffff, 0.55));
